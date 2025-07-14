@@ -1,66 +1,124 @@
-## Foundry
+# FixedWindowTWAPOracle Contract
 
-**Foundry is a blazing fast, portable and modular toolkit for Ethereum application development written in Rust.**
+A production-ready fixed-window TWAP Oracle for Uniswap V2 pairs. Provides manipulation-resistant price feeds using Uniswap's cumulative price mechanism with enhanced security features.
 
-Foundry consists of:
+## WARNING 
 
--   **Forge**: Ethereum testing framework (like Truffle, Hardhat and DappTools).
--   **Cast**: Swiss army knife for interacting with EVM smart contracts, sending transactions and getting chain data.
--   **Anvil**: Local Ethereum node, akin to Ganache, Hardhat Network.
--   **Chisel**: Fast, utilitarian, and verbose solidity REPL.
+This is not audited or tested code. Use at your own risk.
 
-## Documentation
+## Features
 
-https://book.getfoundry.sh/
+-  **Anti-manipulation**: Time-weighted prices over configurable windows
+-  **Gas-efficient**: Optimized for minimal update costs
+-  **Simple integration**: Easy-to-use consultation functions
+-  **Configurable**: Adjustable TWAP window size
+-  **Security-first**: Liquidity checks and circuit breaker
+-  **Precision**: Fixed-point arithmetic for accurate pricing
+
+
+## Installation
+
+```bash
+npm install @uniswap/v2-core @openzeppelin/contracts
+```
 
 ## Usage
 
-### Build
+### Importing the Contract
 
-```shell
-$ forge build
+```solidity
+import "path/to/FixedWindowTWAPOracle.sol";
+
+contract MyContract {
+    FixedWindowTWAPOracle oracle;
+    
+    constructor(address oracleAddress) {
+        oracle = FixedWindowTWAPOracle(oracleAddress);
+    }
+}
 ```
 
-### Test
+### Basic Operations
 
-```shell
-$ forge test
+```javascript
+// Initialize oracle
+const oracle = await FixedWindowTWAPOracle.deploy(
+  "0xA478c297...", // Uniswap V2 pair
+  3600              // 1-hour window
+);
+
+// Update TWAP (call after each window)
+await oracle.update();
+
+// Get ETH price in DAI terms
+const ethPrice = await oracle.getToken0Price();
+
+// Convert 1 ETH to DAI equivalent
+const daiAmount = await oracle.convertToken0ToToken1(
+  ethers.utils.parseEther("1")
+);
 ```
 
-### Format
+### Configuration
 
-```shell
-$ forge fmt
+```javascript
+// Change to 24-hour window (owner only)
+await oracle.setWindowSize(86400);
 ```
 
-### Gas Snapshots
+## Functions
 
-```shell
-$ forge snapshot
-```
+| Function | Description |
+|----------|-------------|
+| `update()` | Updates the TWAP calculation |
+| `getToken0Price()` | Returns token0 price in token1 terms |
+| `getToken1Price()` | Returns token1 price in token0 terms |
+| `convertToken0ToToken1()` | Converts token0 to token1 amount |
+| `convertToken1ToToken0()` | Converts token1 to token0 amount |
+| `setWindowSize()` | Changes TWAP window duration |
 
-### Anvil
+## Security Best Practices
 
-```shell
-$ anvil
-```
+1. **Automate Updates**:
+   ```javascript
+   // Use Chainlink Keepers or Gelato
+   setInterval(async () => {
+     await oracle.update();
+   }, 3600 * 1000);
+   ```
 
-### Deploy
+2. **Monitor Health**:
+   ```solidity
+   function isPriceStale() public view returns (bool) {
+     return (block.timestamp - lastTimestamp) > windowSize * 2;
+   }
+   ```
 
-```shell
-$ forge script script/Counter.s.sol:CounterScript --rpc-url <your_rpc_url> --private-key <your_private_key>
-```
+3. **Add Liquidity Checks**:
+   ```solidity
+   (uint112 r0, uint112 r1,) = pair.getReserves();
+   require(r0 > minReserve0 && r1 > minReserve1, "Low liquidity");
+   ```
 
-### Cast
+4. **Combine with Chainlink**:
+   ```solidity
+   function getPrice(address token) public view returns (uint256) {
+     if (oracle.isPriceStale()) {
+       return chainlinkOracle.getPrice(token);
+     }
+     return oracle.getToken0Price();
+   }
+   ```
 
-```shell
-$ cast <subcommand>
-```
+## Maintenance Schedule
 
-### Help
+| Task | Frequency | Tools |
+|------|-----------|-------|
+| Update Oracle | Every window period | Chainlink Keepers |
+| Health Check | Daily | Custom monitoring |
+| Parameter Review | Monthly | Governance |
+| Security Audit | Quarterly | Professional auditors |
 
-```shell
-$ forge --help
-$ anvil --help
-$ cast --help
-```
+## Support
+
+For integration support or security concerns, please open an issue on GitHub.
