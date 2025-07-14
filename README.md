@@ -66,16 +66,6 @@ const daiAmount = await oracle.convertToken0ToToken1(
 await oracle.setWindowSize(86400);
 ```
 
-## Functions
-
-| Function | Description |
-|----------|-------------|
-| `update()` | Updates the TWAP calculation |
-| `getToken0Price()` | Returns token0 price in token1 terms |
-| `getToken1Price()` | Returns token1 price in token0 terms |
-| `convertToken0ToToken1()` | Converts token0 to token1 amount |
-| `convertToken1ToToken0()` | Converts token1 to token0 amount |
-| `setWindowSize()` | Changes TWAP window duration |
 
 ## Security Best Practices
 
@@ -109,15 +99,6 @@ await oracle.setWindowSize(86400);
      return oracle.getToken0Price();
    }
    ```
-
-## Maintenance Schedule
-
-| Task | Frequency | Tools |
-|------|-----------|-------|
-| Update Oracle | Every window period | Chainlink Keepers |
-| Health Check | Daily | Custom monitoring |
-| Parameter Review | Monthly | Governance |
-| Security Audit | Quarterly | Professional auditors |
 
 ## Support
 
